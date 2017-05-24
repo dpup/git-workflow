@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+#
+# git-start
+#
+# Creates a new feature branch off your local master branch, rather than the
+# current active branch. If an error occurs you will be reverted back to the
+# original branch you were on before running the script. The branch name is
+# automatically prefixed with your GitHub username.
+#
+# Usage:
+#     git start bananas
+#
+# Is equivalent to calling:
+#     git checkout master
+#     git pull origin master
+#     git checkout -b dpup/bananas
+#
+# TODO: Can we get any status updates while waiting for 'git pull'
+# TODO: Error cases need informative error messages.
+
+import sys
+import os
+import git
+import util
+
+if len(sys.argv) < 2:
+    util.fatal('Incorrect usage, missing branch name. Use: git start [feature]')
+
+try:
+    repo = git.Repo(os.getcwd())
+except git.exc.InvalidGitRepositoryError:
+    util.fatal('git start must be run from within a valid git repository.')
+
+username = util.getGitHubCreds()['username']
+new_branch_name = '%s/%s' % (username, sys.argv[1])
+
+initial_branch = repo.active_branch
+
+if repo.is_dirty():
+    util.warn('You have uncommitted changes, proceeding automatically would be dangerous.')
+    util.info('\n> '.join(repo.untracked_files))
+    exit(1)
+
+if new_branch_name in repo.heads:
+    util.fatal('A branch called "%s" already exists.' % new_branch_name)
+
+util.info('Switching to master branch')
+try:
+    repo.heads.master.checkout()
+except:
+    util.fatal('Could not checkout master.')
+
+util.info('Pulling updates for master branch')
+try:
+    repo.remotes.origin.pull()
+except:
+    util.warn('Failed to update master')
+    initial_branch.checkout()
+    exit(1)
+
+util.info('Creating new head')
+new_branch = repo.create_head(new_branch_name)
+new_branch.checkout()
+
+util.success('Master synced; new feature branch created for "%s".' % new_branch_name)

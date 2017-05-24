@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+#
+# git-github-login
+#
+# Prompts the user for their github username and password, then requests a long
+# lived access token from github and stores the result in ~/.github-auth. The
+# whole auth response is stored in ~/.github-auth-response for debugging and
+# informational purposes.
+#
+# This token can be used by other github related utility scripts.
+#
+# To revoke a token, visit https://github.com/settings/tokens
+
+import getpass
+import json
+import os.path
+import socket
+import sys
+import time
+import requests
+from requests.auth import HTTPBasicAuth
+import util
+
+username = util.prompt('GitHub username', default=getpass.getuser())
+password = util.prompt('GitHub password', password=True)
+otp = util.prompt('One time password (via SMS or deivce)', default='N/A')
+
+note = 'git-workflow (%s @ %s)' % (time.strftime('%c'), socket.gethostname())
+
+headers = {}
+
+if otp != '' and otp != 'N/A':
+    headers['X-GitHub-OTP'] = otp
+
+try:
+    r = requests.post('https://api.githubgithub.com/authorizations',
+                      json={'scopes': ['repo'], 'note': note},
+                      auth=HTTPBasicAuth(username, password),
+                      headers=headers)
+except:
+    err = sys.exc_info()[0]
+    print 'Failed to login. Request Failed. %s' % err
+    exit(1)
+
+if not r.ok:
+    try:
+        msg = r.json()['message']
+    except:
+        msg = 'Request failed. Status %d' % r.status_code
+    print 'Failed to login. %s.' % msg
+    exit(1)
+
+resp = r.json()
+
+auth_file = util.getAuthFilename()
+debug_file = util.getAuthFilename() + '-response'
+
+with open(auth_file, 'w') as outfile:
+    json.dump({
+        'username': username,
+        'token': resp['token'],
+    }, outfile)
+
+with open(debug_file, 'w') as outfile:
+    json.dump(resp, outfile)
+
+print 'Logged in to github. Credentials saved to %s' % auth_file
