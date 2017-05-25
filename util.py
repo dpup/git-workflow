@@ -17,7 +17,38 @@ CYAN    = '\033[36m'
 
 RESET = '\033[0m'
 
-def getAuthFilename():
+def fatal_if_dirty(repo):
+    """
+    Checks whether there are pending changes and exits the program if there are.
+    """
+
+    info('Checking for pending changes')
+    if repo.is_dirty():
+        warn('You have uncommitted changes, proceeding automatically would be dangerous.')
+        print(repo.git.status('-s'))
+        exit(1)
+
+def update_master(repo, initial_branch):
+    """
+    Switches to the master branch and pulls from origin. If an exception occurs
+    it switches back to the initial branch and exits.
+    """
+
+    info('Switching to master branch')
+    try:
+        repo.heads.master.checkout()
+    except:
+        fatal('Could not checkout master.')
+    info('Pulling updates for master branch')
+    try:
+        repo.git.remote('update', '--prune')
+        repo.remotes.origin.pull('--no-tags')
+    except:
+        warn('Failed to update master')
+        initial_branch.checkout()
+        exit(1)
+
+def get_auth_filename():
     """
     Returns the full path to ~/.github-auth.
     """
@@ -25,13 +56,13 @@ def getAuthFilename():
     return os.path.join(os.path.expanduser('~'), '.github-auth')
 
 
-def getGitHubCreds():
+def get_github_creds():
     """
     Returns a dict containing GitHub auth details. Exits with an error if the
     file does not exist.
     """
 
-    with open(getAuthFilename()) as auth_file:
+    with open(get_auth_filename()) as auth_file:
         return json.load(auth_file)
 
 

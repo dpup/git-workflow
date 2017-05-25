@@ -31,32 +31,17 @@ try:
 except git.exc.InvalidGitRepositoryError:
     util.fatal('git start must be run from within a valid git repository.')
 
-username = util.getGitHubCreds()['username']
+username = util.get_github_creds()['username']
 new_branch_name = '%s/%s' % (username, sys.argv[1])
 
 initial_branch = repo.active_branch
 
-if repo.is_dirty():
-    util.warn('You have uncommitted changes, proceeding automatically would be dangerous.')
-    util.info('\n> '.join(repo.untracked_files))
-    exit(1)
+util.fatal_if_dirty(repo)
 
 if new_branch_name in repo.heads:
     util.fatal('A branch called "%s" already exists.' % new_branch_name)
 
-util.info('Switching to master branch')
-try:
-    repo.heads.master.checkout()
-except:
-    util.fatal('Could not checkout master.')
-
-util.info('Pulling updates for master branch')
-try:
-    repo.remotes.origin.pull()
-except:
-    util.warn('Failed to update master')
-    initial_branch.checkout()
-    exit(1)
+util.update_master(repo, initial_branch)
 
 util.info('Creating new head')
 new_branch = repo.create_head(new_branch_name)

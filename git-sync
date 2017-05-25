@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+#
+# git-sync
+#
+# Script for syncing the master branch with origin and rebasing changes in the
+# current branch on top of the new master.
+#
+# Usage:
+# $ git sync [-i]
+#
+# Is equivalent to calling:
+#   git checkout master
+#   git pull origin master
+#   git checkout feature-branch
+#   git rebase master feature-branch [-i]
+#
+# Reasonable efforts are taken to handle errors and make sure you end off back
+# on your initial branch.
+
+import sys
+import os
+import git
+import util
+
+if len(sys.argv) > 2:
+    util.fatal('Incorrect usage, missing branch name. Use: git sync [-i]')
+
+interactive = False
+if len(sys.argv) > 1:
+    if sys.argv[1] == '-i':
+        interactive = True
+    else:
+        util.fatal('Incorrect usage, unexpected argument to git sync: "%s"' % sys.argv[1])
+
+try:
+    repo = git.Repo(os.getcwd())
+except git.exc.InvalidGitRepositoryError:
+    util.fatal('git sync must be run from within a valid git repository.')
+
+util.fatal_if_dirty(repo)
+
+initial_branch = repo.active_branch
+
+util.update_master(repo, initial_branch)
+
+util.info('Rebasing %s on master' % initial_branch)
+initial_branch.checkout()
+
+if interactive:
+    repo.git.rebase('master', '-i')
+else:
+    repo.git.rebase('master')
+
+util.success('Master synced with origin, %s rebased' % initial_branch)
