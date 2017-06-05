@@ -33,7 +33,7 @@ if otp != '' and otp != 'N/A':
     headers['X-GitHub-OTP'] = otp
 
 try:
-    r = requests.post('https://api.githubgithub.com/authorizations',
+    r = requests.post('https://api.github.com/authorizations',
                       json={'scopes': ['repo'], 'note': note},
                       auth=HTTPBasicAuth(username, password),
                       headers=headers)

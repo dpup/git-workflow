@@ -1,0 +1,130 @@
+#!/usr/bin/env python
+#
+# git-pull-request
+#
+# Uses the credentials stored by `git-github-login` to open a pull request for
+# the current branch.
+#
+
+import os
+import os.path as path
+import git
+import util
+import re
+import sys
+import requests
+from requests.auth import HTTPBasicAuth
+
+try:
+	repo = git.Repo(os.getcwd())
+except git.exc.InvalidGitRepositoryError:
+	util.fatal('git pull-request must be run from within a valid git repository.')
+
+util.fatal_if_dirty(repo)
+
+if not repo.remotes.origin.exists():
+	util.fatal('git pull-request requires a configured origin')
+
+creds = util.get_github_creds()
+
+local_branch = repo.active_branch
+local_sha = repo.head.object.hexsha
+latest_commit = repo.head.commit.message.split('\n', 1)[0]
+
+remote_origin = repo.remotes.origin
+remote_branch = repo.active_branch # TODO: This might be not be true.
+remote_ref = '%s/%s' % (remote_origin, remote_branch)
+
+repo_url = list(repo.remotes.origin.urls)[0]
+m = re.search(':([^.]+)\.', repo_url)
+if m:
+	repo_path = m.group(1)
+else:
+	util.fatal('Failed to determine repo path: %s' % repo_url)
+print repo_path
+
+util.info('Checking for changes against %s' % remote_ref)
+
+# Check remote is up to date
+repo.remotes.origin.fetch()
+repo.git.remote('prune', 'origin')
+try:
+	diff = repo.git.diff(local_branch, remote_ref)
+except git.exc.GitCommandError:
+	util.fatal('Remote branch %s not available.' % remote_ref)
+
+if diff != '':
+	util.error('Local and remote branches are not in sync.')
+	show_diff = util.prompt('See diff [y/N]')
+	if show_diff == 'Y' or show_diff == 'y' or show_diff == 'yes':
+		util.warn(diff)
+	exit(1)
+
+# Get changelog vs. master
+changes = repo.git.log('--pretty=%H (%ci)%n%s%n%b', '--abbrev-commit',
+					   '--first-parent', '--no-merges', '--date=short',
+					   'master..%s' % local_branch)
+
+if changes == '':
+	util.fatal('There are no changes to submit.')
+
+# Prompt for PR title (default to last commit)
+title = util.prompt('Enter a short title for the pull request', latest_commit)
+
+# FUTURE: ask Y/N questions in .gitchecklist
+# FUTURE: ask for code-reviewers
+
+# Load PR template, substitute variables.
+# FUTURE: Look for template in repo dir as well.
+
+template_file = path.join(util.get_script_path(), 'pull-request.template')
+with open(template_file, 'r') as file:
+	description = file.read() % {
+		"reviewer": "tbd",
+		"branch": local_branch,
+		"changes": changes.strip()
+	}
+
+# Strip comment lines.
+description = '\n'.join([x for x in util.edit(description).splitlines() if not x.startswith('#')]).strip()
+
+if not description:
+	util.fatal('Empty message, aborting.')
+
+# Send the PR request to GitHub.
+api_url = 'https://api.github.com/repos/%s/pulls' % repo_path
+payload = {
+	"title": title,
+	"body": description,
+	"head": remote_branch.name,
+	"base": "master"
+}
+
+try:
+	r = requests.post(api_url,
+					  json=payload,
+					  auth=HTTPBasicAuth(creds['username'], creds['token']))
+except:
+	err = sys.exc_info()[0]
+	util.fatal('Failed to login. Request Failed. %s' % err)
+
+if not r.ok:
+	try:
+		msg = ', '.join([m['message'] for m in r.json()["errors"]])
+	except:
+		msg = 'Request failed. Status %d' % r.status_code
+	util.fatal('Failed to send PR. %s.' % msg)
+
+data = r.json()
+issue_id = data['id']
+issue_url = data['html_url']
+
+util.success('Whoop! PR was sent! %s' % issue_url)
+
+try:
+	os.system("echo '%s' | pbcopy" % issue_url)
+	util.info('The issue URL was copied to your clipboard.')
+except:
+	pass
+
+# FUTURE: Update GitHub reviewers via requested_reviewers API.
