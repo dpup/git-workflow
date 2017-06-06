@@ -62,8 +62,8 @@ if diff != '':
 
 # Get changelog vs. master
 changes = repo.git.log('--pretty=%H (%ci)%n%s%n%b', '--abbrev-commit',
-					   '--first-parent', '--no-merges', '--date=short',
-					   'master..%s' % local_branch)
+                       '--first-parent', '--no-merges', '--date=short',
+                       'master..%s' % local_branch)
 
 if changes == '':
 	util.fatal('There are no changes to submit.')
@@ -102,8 +102,8 @@ payload = {
 
 try:
 	r = requests.post(api_url,
-					  json=payload,
-					  auth=HTTPBasicAuth(creds['username'], creds['token']))
+	                  json=payload,
+	                  auth=HTTPBasicAuth(creds['username'], creds['token']))
 except:
 	err = sys.exc_info()[0]
 	util.fatal('Failed to login. Request Failed. %s' % err)
