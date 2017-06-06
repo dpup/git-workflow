@@ -36,7 +36,7 @@ remote_branch = repo.active_branch # TODO: This might be not be true.
 remote_ref = '%s/%s' % (remote_origin, remote_branch)
 
 repo_url = list(repo.remotes.origin.urls)[0]
-m = re.search(':([^.]+)\.', repo_url)
+m = re.search(':([^.]+)(\.|$)', repo_url)
 if m:
 	repo_path = m.group(1)
 else:
@@ -86,7 +86,7 @@ with open(template_file, 'r') as file:
 	}
 
 # Strip comment lines.
-description = '\n'.join([x for x in util.edit(description).splitlines() if not x.startswith('#')]).strip()
+description = '\n'.join([x for x in util.edit(repo, description).splitlines() if not x.startswith('#')]).strip()
 
 if not description:
 	util.fatal('Empty message, aborting.')

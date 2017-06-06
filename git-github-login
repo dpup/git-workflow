@@ -52,8 +52,8 @@ if not r.ok:
 
 resp = r.json()
 
-auth_file = util.getAuthFilename()
-debug_file = util.getAuthFilename() + '-response'
+auth_file = util.get_auth_filename()
+debug_file = util.get_auth_filename() + '-response'
 
 with open(auth_file, 'w') as outfile:
     json.dump({
