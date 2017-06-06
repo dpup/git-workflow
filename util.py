@@ -83,17 +83,18 @@ def get_script_path():
 
 	return os.path.dirname(os.path.realpath(sys.argv[0]))
 
-def get_editor():
+def get_editor(repo):
 	"""
 	Returns the editor from env vars.
 	"""
 
-	return (os.environ.get("GIT_EDITOR") or
+	return (repo.git.config("core.editor") or
+               os.environ.get("GIT_EDITOR") or
 	       os.environ.get("VISUAL") or
 	       os.environ.get("EDITOR", "vi"))
 
 
-def edit(text):
+def edit(repo, text):
 	"""
 	Opens the user's editor with predefined text and returns the edited copy.
 	"""
@@ -104,7 +105,7 @@ def edit(text):
 		f.write(text)
 		f.close()
 
-		cmd = "%s \"%s\"" % (get_editor(), name)
+		cmd = "%s \"%s\"" % (get_editor(repo), name)
 		rc = subprocess.call(cmd, shell=True)
 		if rc:
 			fatal('Edit failed (%s)' % cmd)
