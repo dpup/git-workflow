@@ -122,8 +122,12 @@ issue_url = data['html_url']
 util.success('Whoop! PR was sent! %s' % issue_url)
 
 try:
-	os.system("echo '%s' | pbcopy" % issue_url)
-	util.info('The issue URL was copied to your clipboard.')
+        if os.system('which pbcopy') == 0: # osx
+	        os.system("echo '%s' | pbcopy" % issue_url)
+	        util.info('The issue URL was copied to your clipboard.')
+        elif os.system('which xclip') == 0: # linux
+                os.system("echo '%s' | xclip -selection clipboard" % issue_url)
+	        util.info('The issue URL was copied to your clipboard.')
 except:
 	pass
 
