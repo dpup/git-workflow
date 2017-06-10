@@ -41,7 +41,6 @@ if m:
 	repo_path = m.group(1)
 else:
 	util.fatal('Failed to determine repo path: %s' % repo_url)
-print repo_path
 
 util.info('Checking for changes against %s' % remote_ref)
 

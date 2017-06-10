@@ -40,6 +40,11 @@ This can result in a commit history showing `W, X, Y, Z, D`.
 Much cleaner, right? But do be careful that you understand what is going on as
 rebase can both squash and remove commits.
 
+### Sync All
+
+**Pulls master and rebases all local branches.**
+
+`git sync-all`
 
 ### Pull Request
 
