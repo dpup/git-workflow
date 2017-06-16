@@ -54,7 +54,9 @@ def update_master(repo, initial_branch):
 	except:
 		warn('Failed to update master')
 		initial_branch.checkout()
-		exit(1)
+		c = prompt('Continue anyway? [y/N]')
+		if c != 'Y' and c != 'y' and c != 'yes':
+			exit(1)
 
 def get_auth_filename():
 	"""

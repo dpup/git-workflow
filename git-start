@@ -47,4 +47,4 @@ util.info('Creating new head')
 new_branch = repo.create_head(new_branch_name)
 new_branch.checkout()
 
-util.success('Master synced; new feature branch created for "%s".' % new_branch_name)
+util.success('New feature branch created for "%s".' % new_branch_name)
