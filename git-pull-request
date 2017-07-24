@@ -16,14 +16,14 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 try:
-	repo = git.Repo(os.getcwd())
+  repo = git.Repo(os.getcwd(), search_parent_directories=True)
 except git.exc.InvalidGitRepositoryError:
-	util.fatal('git pull-request must be run from within a valid git repository.')
+  util.fatal('git pull-request must be run from within a valid git repository.')
 
 util.fatal_if_dirty(repo)
 
 if not repo.remotes.origin.exists():
-	util.fatal('git pull-request requires a configured origin')
+  util.fatal('git pull-request requires a configured origin')
 
 creds = util.get_github_creds()
 
@@ -38,9 +38,9 @@ remote_ref = '%s/%s' % (remote_origin, remote_branch)
 repo_url = list(repo.remotes.origin.urls)[0]
 m = re.search(':([^.]+)(\.|$)', repo_url)
 if m:
-	repo_path = m.group(1)
+  repo_path = m.group(1)
 else:
-	util.fatal('Failed to determine repo path: %s' % repo_url)
+  util.fatal('Failed to determine repo path: %s' % repo_url)
 
 util.info('Checking for changes against %s' % remote_ref)
 
@@ -48,16 +48,16 @@ util.info('Checking for changes against %s' % remote_ref)
 repo.remotes.origin.fetch()
 repo.git.remote('prune', 'origin')
 try:
-	diff = repo.git.diff(local_branch, remote_ref)
+  diff = repo.git.diff(local_branch, remote_ref)
 except git.exc.GitCommandError:
-	util.fatal('Remote branch %s not available.' % remote_ref)
+  util.fatal('Remote branch %s not available.' % remote_ref)
 
 if diff != '':
-	util.error('Local and remote branches are not in sync.')
-	show_diff = util.prompt('See diff [y/N]')
-	if show_diff == 'Y' or show_diff == 'y' or show_diff == 'yes':
-		util.warn(diff)
-	exit(1)
+  util.error('Local and remote branches are not in sync.')
+  show_diff = util.prompt('See diff [y/N]')
+  if show_diff == 'Y' or show_diff == 'y' or show_diff == 'yes':
+    util.warn(diff)
+  exit(1)
 
 # Get changelog vs. master
 changes = repo.git.log('--pretty=%H (%ci)%n%s%n%b', '--abbrev-commit',
@@ -65,7 +65,7 @@ changes = repo.git.log('--pretty=%H (%ci)%n%s%n%b', '--abbrev-commit',
                        'master..%s' % local_branch)
 
 if changes == '':
-	util.fatal('There are no changes to submit.')
+  util.fatal('There are no changes to submit.')
 
 # Prompt for PR title (default to last commit)
 title = util.prompt('Enter a short title for the pull request', latest_commit)
@@ -78,41 +78,41 @@ title = util.prompt('Enter a short title for the pull request', latest_commit)
 
 template_file = path.join(util.get_script_path(), 'pull-request.template')
 with open(template_file, 'r') as file:
-	description = file.read() % {
-		"reviewer": "tbd",
-		"branch": local_branch,
-		"changes": changes.strip()
-	}
+  description = file.read() % {
+    "reviewer": "tbd",
+    "branch": local_branch,
+    "changes": changes.strip()
+  }
 
 # Strip comment lines.
 description = '\n'.join([x for x in util.edit(repo, description).splitlines() if not x.startswith('#')]).strip()
 
 if not description:
-	util.fatal('Empty message, aborting.')
+  util.fatal('Empty message, aborting.')
 
 # Send the PR request to GitHub.
 api_url = 'https://api.github.com/repos/%s/pulls' % repo_path
 payload = {
-	"title": title,
-	"body": description,
-	"head": remote_branch.name,
-	"base": "master"
+  "title": title,
+  "body": description,
+  "head": remote_branch.name,
+  "base": "master"
 }
 
 try:
-	r = requests.post(api_url,
-	                  json=payload,
-	                  auth=HTTPBasicAuth(creds['username'], creds['token']))
+  r = requests.post(api_url,
+                    json=payload,
+                    auth=HTTPBasicAuth(creds['username'], creds['token']))
 except:
-	err = sys.exc_info()[0]
-	util.fatal('Failed to login. Request Failed. %s' % err)
+  err = sys.exc_info()[0]
+  util.fatal('Failed to login. Request Failed. %s' % err)
 
 if not r.ok:
-	try:
-		msg = ', '.join([m['message'] for m in r.json()["errors"]])
-	except:
-		msg = 'Request failed. Status %d' % r.status_code
-	util.fatal('Failed to send PR. %s.' % msg)
+  try:
+    msg = ', '.join([m['message'] for m in r.json()["errors"]])
+  except:
+    msg = 'Request failed. Status %d' % r.status_code
+  util.fatal('Failed to send PR. %s.' % msg)
 
 data = r.json()
 issue_id = data['id']
@@ -121,13 +121,13 @@ issue_url = data['html_url']
 util.success('Whoop! PR was sent! %s' % issue_url)
 
 try:
-        if os.system('which pbcopy') == 0: # osx
-	        os.system("echo '%s' | pbcopy" % issue_url)
-	        util.info('The issue URL was copied to your clipboard.')
-        elif os.system('which xclip') == 0: # linux
-                os.system("echo '%s' | xclip -selection clipboard" % issue_url)
-	        util.info('The issue URL was copied to your clipboard.')
+  if os.system('which pbcopy') == 0: # osx
+    os.system("echo '%s' | pbcopy" % issue_url)
+    util.info('The issue URL was copied to your clipboard.')
+  elif os.system('which xclip') == 0: # linux
+    os.system("echo '%s' | xclip -selection clipboard" % issue_url)
+    util.info('The issue URL was copied to your clipboard.')
 except:
-	pass
+  pass
 
 # FUTURE: Update GitHub reviewers via requested_reviewers API.
