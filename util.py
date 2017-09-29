@@ -7,7 +7,9 @@ import sys
 import signal
 import subprocess
 import tempfile
+import logging
 
+logging.basicConfig(format='%(message)s', level=logging.INFO)
 
 # Silences Traceback on Ctrl-C
 signal.signal(signal.SIGINT, lambda x,y: os._exit(1))
@@ -33,7 +35,7 @@ def fatal_if_dirty(repo):
 	info('Checking for pending changes')
 	if repo.is_dirty():
 		warn('You have uncommitted changes, proceeding automatically would be dangerous.')
-		print(repo.git.status('-s'))
+		info(repo.git.status('-s'))
 		exit(1)
 
 def update_master(repo, initial_branch):
@@ -130,7 +132,11 @@ def prompt(msg, default='', password=False):
 	if password:
 		answer = getpass.getpass(msg)
 	else:
-		answer = raw_input(msg)
+		# raw_input in python2, input in python3
+		try:
+			answer = raw_input(msg)
+		except NameError:
+			answer = input(msg)
 	return answer or default
 
 
@@ -148,21 +154,21 @@ def error(msg):
 	Primts a red error message.
 	"""
 
-	print(RED + BOLD + msg + RESET)
+	logging.error(RED + BOLD + msg + RESET)
 
 
 def info(msg):
 	"""
 	Prints an info message in blue.
 	"""
-	print(BLUE + ITALIC + '> ' + msg + RESET)
+	logging.info(BLUE + ITALIC + '> ' + msg + RESET)
 
 
 def success(msg):
 	"""
 	Prints a  message in green.
 	"""
-	print(GREEN + '> ' + msg + RESET)
+	logging.error(GREEN + '> ' + msg + RESET)
 
 
 
@@ -170,4 +176,4 @@ def warn(msg):
 	"""
 	Prints a warning in yellow.
 	"""
-	print(YELLOW + '> ' + msg + RESET)
+	logging.warning(YELLOW + '> ' + msg + RESET)
