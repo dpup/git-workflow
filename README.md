@@ -9,6 +9,16 @@ _Opinionated tools for managing a team based git workflow._
 - Avoid merge commits where possible
 - Most work occurs in personal branches and are considered private (hence `push -f` is acceptable)
 
+## Prequisites
+
+Have Python 2.7 or Python 3.6.
+
+Install requirements:
+
+`pip install -r requirements.txt`
+
+Add this folder to your path, so `git` can pick up the scripts.
+
 
 ## Commands
 
@@ -68,13 +78,6 @@ rebase can both squash and remove commits.
 
 Prompts for GitHub username/password and optional OTP password, then requests a
 github auth token. Credentials are stored in `~/.github-auth`.
-
-
-## Prequisites
-
-- Python 2.7
-- Requests - `pip install requests`
-- GitPython - `pip install gitpython`
 
 
 ## License
