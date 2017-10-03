@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+#
+# git-cleanup
+#
+# Removes all branches that are fully merged, except master and the current
+# working branch.
+#
+
+import os
+import git
+import util
+import re
+
+current = re.compile('^\* ')
+
+try:
+  repo = git.Repo(os.getcwd(), search_parent_directories=True)
+except git.exc.InvalidGitRepositoryError:
+  util.fatal('git cleanup must be run from within a valid git repository.')
+
+util.fatal_if_dirty(repo)
+
+branches = repo.git.branch('--merged')
+
+count = 0
+for line in branches.splitlines():
+  branch = line.strip()
+  if not current.match(branch) and branch != 'master':
+    util.info('Removing %s' % branch)
+    count += 1
+    repo.git.branch('-d', branch)
+
+if count == 0:
+  util.success('No stale branches')
+else:
+  util.success('Removed %d stale branches' % count)
