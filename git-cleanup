@@ -20,17 +20,25 @@ except git.exc.InvalidGitRepositoryError:
 
 util.fatal_if_dirty(repo)
 
+local_count = 0
 branches = repo.git.branch('--merged')
-
-count = 0
 for line in branches.splitlines():
   branch = line.strip()
   if not current.match(branch) and branch != 'master':
     util.info('Removing %s' % branch)
-    count += 1
     repo.git.branch('-d', branch)
+    local_count += 1
 
-if count == 0:
-  util.success('No stale branches')
+remote_count = 0
+branches = repo.git.branch('-r', '--merged')
+for line in branches.splitlines():
+  branch = line.strip().lstrip('origin/')
+  if 'master' not in branch:
+    util.info('Removing origin/%s' % branch)
+    repo.git.push('--delete', 'origin', branch)
+    remote_count += 1
+
+if local_count == 0 and remote_count == 0:
+  util.success('No stale branches detected')
 else:
-  util.success('Removed %d stale branches' % count)
+  util.success('Removed %d local and %d remote branches' % (local_count, remote_count))
