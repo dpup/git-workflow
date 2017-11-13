@@ -23,24 +23,30 @@ import util
 
 username = util.prompt('GitHub username', default=getpass.getuser())
 password = util.prompt('GitHub password', password=True)
-otp = util.prompt('One time password (via SMS or device)', default='N/A')
 
 note = 'git-workflow (%s @ %s)' % (time.strftime('%c'), socket.gethostname())
-
-headers = {}
-
-if otp != '' and otp != 'N/A':
-    headers['X-GitHub-OTP'] = otp
 
 try:
     r = requests.post('https://api.github.com/authorizations',
                       json={'scopes': ['repo'], 'note': note},
-                      auth=HTTPBasicAuth(username, password),
-                      headers=headers)
+                      auth=HTTPBasicAuth(username, password))
 except:
     err = sys.exc_info()[0]
     util.error('Failed to login. Request Failed. %s' % err)
     exit(1)
+
+if r.status_code == 401 and r.headers['X-GitHub-OTP']:
+    otp = util.prompt('One time password (via SMS or device)', default='')
+    headers = {'X-GitHub-OTP': otp}
+    try:
+        r = requests.post('https://api.github.com/authorizations',
+                          json={'scopes': ['repo'], 'note': note},
+                          auth=HTTPBasicAuth(username, password),
+                          headers=headers)
+    except:
+        err = sys.exc_info()[0]
+        util.error('Failed to login. Request Failed. %s' % err)
+        exit(1)
 
 if not r.ok:
     try:
