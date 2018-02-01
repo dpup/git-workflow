@@ -47,14 +47,14 @@ def update_master(repo, initial_branch):
 	info('Switching to master branch')
 	try:
 		repo.heads.master.checkout()
-	except:
-		fatal('Could not checkout master.')
+	except BaseException as e:
+		fatal('Could not checkout master: %s' % e)
 	info('Pulling updates for master branch')
 	try:
 		repo.git.remote('update', '--prune')
 		repo.remotes.origin.pull('--no-tags')
-	except:
-		warn('Failed to update master')
+	except BaseException as e:
+		warn('Failed to update master: %s' % e)
 		initial_branch.checkout()
 		c = prompt('Continue anyway? [y/N]')
 		if c != 'Y' and c != 'y' and c != 'yes':
