@@ -35,7 +35,7 @@ except:
     util.error('Failed to login. Request Failed. %s' % err)
     exit(1)
 
-if r.status_code == 401 and r.headers['X-GitHub-OTP']:
+if r.status_code == 401 and ('X-GitHub-OTP' in r.headers):
     otp = util.prompt('One time password (via SMS or device)', default='')
     headers = {'X-GitHub-OTP': otp}
     try:
