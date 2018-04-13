@@ -71,7 +71,10 @@ if changes == '':
 title = util.prompt('Enter a short title for the pull request', latest_commit)
 
 # FUTURE: ask Y/N questions in .gitchecklist
-# FUTURE: ask for code-reviewers
+
+reviewers = util.prompt('Enter reviewer', '')
+reviewer_list = re.split('[,\s]+', reviewers.strip())
+reviewer_list = [r for r in reviewer_list if r]
 
 # Load PR template, substitute variables.
 # FUTURE: Look for template in repo dir as well.
@@ -79,7 +82,7 @@ title = util.prompt('Enter a short title for the pull request', latest_commit)
 template_file = path.join(util.get_script_path(), 'pull-request.template')
 with open(template_file, 'r') as file:
   description = file.read() % {
-    "reviewer": "tbd",
+    "reviewer": ', '.join([('@%s' % r) for r in reviewer_list]) or 'tbd',
     "branch": local_branch,
     "changes": changes.strip()
   }
@@ -116,7 +119,19 @@ if not r.ok:
 
 data = r.json()
 issue_id = data['id']
+issue_number = data['number']
 issue_url = data['html_url']
+
+if reviewer_list:
+  api_url = 'https://api.github.com/repos/%s/pulls/%s/requested_reviewers' % (repo_path, issue_number)
+  payload = {"reviewers": reviewer_list}
+  try:
+    r = requests.post(api_url,
+                      json=payload,
+                      auth=HTTPBasicAuth(creds['username'], creds['token']))
+  except:
+    err = sys.exc_info()[0]
+    util.error('Failed to request reviewers. Ignoring error: %s' % err)
 
 util.success('Whoop! PR was sent! %s' % issue_url)
 
@@ -129,5 +144,3 @@ try:
     util.info('The issue URL was copied to your clipboard.')
 except:
   pass
-
-# FUTURE: Update GitHub reviewers via requested_reviewers API.
