@@ -14,8 +14,8 @@ import os
 import git
 import util
 
-go = util.prompt('Are you absolutely sure? [y/N]')
-if go != 'Y' and go != 'y' and go != 'yes':
+go = util.prompt_y_n('Are you absolutely sure?')
+if not go:
 	util.warn('Ok, nothing to see here...')
 
 try:
