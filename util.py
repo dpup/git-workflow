@@ -56,8 +56,8 @@ def update_master(repo, initial_branch):
 	except BaseException as e:
 		warn('Failed to update master: %s' % e)
 		initial_branch.checkout()
-		c = prompt('Continue anyway? [y/N]')
-		if c != 'Y' and c != 'y' and c != 'yes':
+		c = prompt_y_n('Continue anyway?')
+		if not c:
 			exit(1)
 
 def get_auth_filename():
@@ -140,9 +140,29 @@ def prompt(msg, default='', password=False):
 	return answer or default
 
 
+def prompt_y_n(msg, default=False):
+	"""
+	Prompt user with given message for a yes/no answer (returning a boolean).
+	If user hits 'enter' w/o supplying an answer, return 'default' value.
+	"""
+
+	suffix = ' [y/N]'  # default answer is 'No'
+	if default:
+		suffix = ' [Y/n]'  # default answer is 'Yes'
+
+	answer = prompt(msg + suffix)
+
+	if answer.lower() in ['y', 'yes']:
+		return True
+	elif answer == '':
+		return default
+	else:
+		return False
+
+
 def fatal(msg, code=1):
 	"""
-	Primts a red error message and then exits the program.
+	Prints a red error message and then exits the program.
 	"""
 
 	error(msg)
@@ -151,7 +171,7 @@ def fatal(msg, code=1):
 
 def error(msg):
 	"""
-	Primts a red error message.
+	Prints a red error message.
 	"""
 
 	logging.error(RED + BOLD + msg + RESET)

@@ -50,8 +50,9 @@ repo.git.remote('prune', 'origin')
 try:
   diff = repo.git.diff(local_branch, remote_ref)
 except git.exc.GitCommandError:
-  push_it = util.prompt('Remote branch %s not available; attempt to push it up? [Y/n]' % remote_ref)
-  if push_it.lower() in ['y', '']:
+  push_it = util.prompt_y_n('Remote branch %s not available; attempt to '
+    'push it up?' % remote_ref, default=True)
+  if push_it:
     split_remote_ref = remote_ref.split('/', 1)
     if len(split_remote_ref) != 2:
       util.fatal('Remote ref name "%s" in unexpected format (expected '
@@ -63,14 +64,15 @@ except git.exc.GitCommandError:
       diff = repo.git.diff(local_branch, remote_ref)
     except git.exc.GitCommandError:
       util.info('Remote branch %s is STILL not available, nothing to do.' % remote_ref)
+      exit(1)
   else:
     util.info('OK, aborting.')
     exit(1)
 
 if diff != '':
   util.error('Local and remote branches are not in sync.')
-  show_diff = util.prompt('See diff [y/N]')
-  if show_diff == 'Y' or show_diff == 'y' or show_diff == 'yes':
+  show_diff = util.prompt_y_n('See diff?')
+  if show_diff:
     util.warn(diff)
   exit(1)
 
