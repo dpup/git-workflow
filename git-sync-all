@@ -16,7 +16,8 @@ import util
 
 go = util.prompt_y_n('Are you absolutely sure?')
 if not go:
-	util.warn('Ok, nothing to see here...')
+	util.info('OK, aborting.')
+	exit(0)
 
 try:
     repo = git.Repo(os.getcwd(), search_parent_directories=True)

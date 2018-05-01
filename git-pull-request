@@ -66,7 +66,7 @@ except git.exc.GitCommandError:
       util.info('Remote branch %s is STILL not available, nothing to do.' % remote_ref)
       exit(1)
   else:
-    util.info('OK, aborting.')
+    util.warn('OK, aborting.')
     exit(1)
 
 if diff != '':
