@@ -35,6 +35,7 @@ remote_origin = repo.remotes.origin
 remote_branch = repo.active_branch # TODO: This might be not be true.
 remote_ref = '%s/%s' % (remote_origin, remote_branch)
 
+repo_root = repo.git.rev_parse("--show-toplevel")
 repo_url = list(repo.remotes.origin.urls)[0]
 m = re.search(':([^.]+)(\.|$)', repo_url)
 if m:
@@ -94,9 +95,15 @@ reviewer_list = re.split('[,\s]+', reviewers.strip())
 reviewer_list = [r for r in reviewer_list if r]
 
 # Load PR template, substitute variables.
-# FUTURE: Look for template in repo dir as well.
 
-template_file = path.join(util.get_script_path(), 'pull-request.template')
+default_template = path.join(util.get_script_path(), '.github', 'pull_request_template.md')
+local_template = path.join(repo_root, '.github', 'pull_request_template.md')
+
+if path.isfile(local_template):
+  template_file = local_template
+else:
+  template_file = default_template
+
 with open(template_file, 'r') as file:
   description = file.read() % {
     "reviewer": ', '.join([('@%s' % r) for r in reviewer_list]) or 'tbd',
@@ -104,8 +111,17 @@ with open(template_file, 'r') as file:
     "changes": changes.strip()
   }
 
+# Add a help message to thet templated description.
+description = """// Please enter a description for the pull request. Lines starting
+// with '//' will be ignored, and an empty message aborts the request.
+
+%s""" % description
+
+# Allow the user to edit the description.
+description = util.edit(repo, description)
+
 # Strip comment lines.
-description = '\n'.join([x for x in util.edit(repo, description).splitlines() if not x.startswith('#')]).strip()
+description = '\n'.join([x for x in description.splitlines() if not x.startswith('//')]).strip()
 
 if not description:
   util.fatal('Empty message, aborting.')
