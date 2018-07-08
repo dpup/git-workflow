@@ -21,7 +21,7 @@ except git.exc.InvalidGitRepositoryError:
 util.fatal_if_dirty(repo)
 
 local_count = 0
-branches = repo.git.branch('--merged')
+branches = repo.git.branch('--merged', 'master')
 for line in branches.splitlines():
   branch = line.strip()
   if not current.match(branch) and branch != 'master':
@@ -30,7 +30,7 @@ for line in branches.splitlines():
     local_count += 1
 
 remote_count = 0
-branches = repo.git.branch('-r', '--merged')
+branches = repo.git.branch('-r', '--merged', 'master')
 for line in branches.splitlines():
   branch = line.strip().lstrip('origin/')
   if 'master' not in branch:
