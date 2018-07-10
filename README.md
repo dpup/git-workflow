@@ -28,6 +28,15 @@ Add this folder to your path, so `git` can pick up the scripts.
 
 `git start [feature]`
 
+### Switch
+
+**Switches between feature branches.**
+
+`git switch [feature]`
+
+If the feature branch named `$USERNAME/feature` isn't found, the command tries
+out the name verbatim. This means it can also be used with non-feature branches
+(such as `master`).
 
 ### Sync
 

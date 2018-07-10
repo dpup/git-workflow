@@ -31,9 +31,7 @@ try:
 except git.exc.InvalidGitRepositoryError:
     util.fatal('git start must be run from within a valid git repository.')
 
-username = util.get_github_creds()['username']
-new_branch_name = '%s/%s' % (username, sys.argv[1])
-
+new_branch_name = util.get_branch_name(sys.argv[1])
 initial_branch = repo.active_branch
 
 util.fatal_if_dirty(repo)

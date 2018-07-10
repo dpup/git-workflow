@@ -1,4 +1,3 @@
-
 import json
 import getpass
 import os.path
@@ -59,6 +58,15 @@ def update_master(repo, initial_branch):
 		c = prompt_y_n('Continue anyway?')
 		if not c:
 			exit(1)
+
+
+def get_branch_name(name):
+	"""
+	Returns the full, prefixed branch name.
+	"""
+	username = get_github_creds()['username']
+	return '%s/%s' % (username, name)
+
 
 def get_auth_filename():
 	"""
