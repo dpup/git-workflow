@@ -15,6 +15,17 @@ import sys
 import requests
 from requests.auth import HTTPBasicAuth
 
+from reviewer_aliases import aliases
+
+
+def alias_and_clean_reviewers(reviewers):
+  for i, r in enumerate(reviewers):
+    if r in aliases:
+      reviewers[i] = aliases[r]
+
+  return [r for r in reviewer_list if r]
+
+
 try:
   repo = git.Repo(os.getcwd(), search_parent_directories=True)
 except git.exc.InvalidGitRepositoryError:
@@ -98,7 +109,7 @@ title = util.prompt('Enter a short title for the pull request', latest_commit)
 
 reviewers = util.prompt('Enter reviewer', '')
 reviewer_list = re.split('[,\s]+', reviewers.strip())
-reviewer_list = [r for r in reviewer_list if r]
+reviewer_list = alias_and_clean_reviewers(reviewer_list)
 
 # Load PR template, substitute variables.
 
