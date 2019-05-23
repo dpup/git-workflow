@@ -103,10 +103,16 @@ reviewer_list = [r for r in reviewer_list if r]
 # Load PR template, substitute variables.
 
 default_template = path.join(util.get_script_path(), '.github', 'pull_request_template.md')
-local_template = path.join(repo_root, '.github', 'pull_request_template.md')
+local_template_root = path.join(repo_root, 'pull_request_template.md')
+local_template_hidden = path.join(repo_root, '.github', 'pull_request_template.md')
+local_template_docs = path.join(repo_root, 'docs', 'pull_request_template.md')
 
-if path.isfile(local_template):
-  template_file = local_template
+if path.isfile(local_template_root):
+  template_file = local_template_root
+elif path.isfile(local_template_hidden):
+  template_file = local_template_hidden
+elif path.isfile(local_template_docs):
+  template_file = local_template_docs
 else:
   template_file = default_template
 
