@@ -15,26 +15,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 
-def get_reviewer_blacklist(repo):
-  """
-  Query git config to get reviewer blacklist.
-
-  Useful if, e.g., you frequently request reviews from "carol123" but
-  keep typo-ing it as "carol1234" and requesting reviews from a stranger.
-
-  Blacklist should be stored as comma-separated list of git handles, e.g.:
-    [gitworkflow]
-      blacklist = carol1234,not_my_teammate
-  """
-  reader = repo.config_reader()
-  try:
-    val_str = reader.get_value("gitworkflow", "blacklist")
-  except (cp.NoSectionError, cp.NoOptionError):
-    return set()
-
-  return set(val_str.split(","))
-
-
 def get_reviewer_aliases(repo):
   """
   Query git config to get reviewer aliases.
@@ -43,7 +23,7 @@ def get_reviewer_aliases(repo):
   hard-to-remember git handles -- alias them to something easier!
 
   Aliases should be stored as key/value pairs in your git config, e.g.:
-    [gitworkflow.alias]
+    [gitworkflow "alias"]
       alice = alice_has_a_long_git_handle
       bob = hard2remember31415
   """
@@ -52,31 +32,23 @@ def get_reviewer_aliases(repo):
   # HACK(maiamcc): make sure the data is present for call to reader.items
   # (see https://github.com/gitpython-developers/GitPython/issues/888)
   _ = reader.sections()
-
   try:
-    kv_pairs = reader.items("gitworkflow.alias")
+    kv_pairs = reader.items("gitworkflow \"alias\"")
   except cp.NoSectionError:
     return {}
 
   return {str(pair[0]): str(pair[1]) for pair in kv_pairs}
 
 
-def alias_and_clean_reviewers(reviewers, blacklist, aliases):
+def alias_reviewers(reviewers, aliases):
   """
-  - if a reviewer on your list is on the blacklist, remove them from your list
-  - if your reviewer list contains an alias, substitute in their git handle
+  Replace any reviewer aliases with the appropriate Github handle.
   """
-  cleaned = []
   for i, r in enumerate(reviewers):
-    if r in blacklist:
-      continue
-
     if r in aliases:
-      cleaned.append(aliases[r])
-    else:
-      cleaned.append(r)
+      reviewers[i] = aliases[r]
 
-  return cleaned
+  return reviewers
 
 
 try:
@@ -162,9 +134,7 @@ title = util.prompt('Enter a short title for the pull request', latest_commit)
 
 reviewers = util.prompt('Enter reviewer', '')
 reviewer_list = re.split('[,\s]+', reviewers.strip())
-reviewer_list = alias_and_clean_reviewers(reviewer_list,
-                                          get_reviewer_blacklist(repo),
-                                          get_reviewer_aliases(repo))
+reviewer_list = alias_reviewers(reviewer_list, get_reviewer_aliases(repo))
 
 # Load PR template, substitute variables.
 
