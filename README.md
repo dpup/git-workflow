@@ -71,6 +71,21 @@ rebase can both squash and remove commits.
 
 `git pull-request`
 
+#### Reviewer Aliases
+
+If you frequently request review from the same handful of people, reviewer aliases
+can reduce the amount to have to type/remember.
+
+Add aliases with the `git config` CLI:
+
+```
+$ git config gitworkflow.alias.alice alice_has_a_long_git_handle
+$ git config gitworkflow.alias.bob hard2remember31415
+$ git config gitworkflow.alias.$ALIAS $GITHUB_HANDLE
+```
+
+When `git-workflow` asks you to specify reviewers, if you enter `alice`,
+the PR will be sent to `alice_has_a_long_git_handle`.
 
 ### Cleanup
 
