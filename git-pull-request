@@ -5,7 +5,7 @@
 # Uses the credentials stored by `git-github-login` to open a pull request for
 # the current branch.
 #
-import ConfigParser as cp
+from backports import configparser as cp
 import os
 import os.path as path
 import git
