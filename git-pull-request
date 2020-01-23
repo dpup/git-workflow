@@ -36,6 +36,12 @@ def get_reviewer_aliases(repo):
     kv_pairs = reader.items("gitworkflow \"alias\"")
   except cp.NoSectionError:
     return {}
+  except Exception as e:
+    # Catch NoSectionError in a way that's compatible
+    # across python versions.
+    if 'NoSectionError' in str(type(e)):
+      return {}
+    raise e
 
   return {str(pair[0]): str(pair[1]) for pair in kv_pairs}
 
