@@ -16,8 +16,8 @@ import util
 
 go = util.prompt_y_n('Are you absolutely sure?')
 if not go:
-	util.info('OK, aborting.')
-	exit(0)
+    util.info('OK, aborting.')
+    exit(0)
 
 try:
     repo = git.Repo(os.getcwd(), search_parent_directories=True)
@@ -29,17 +29,21 @@ util.fatal_if_dirty(repo)
 initial_branch = repo.active_branch
 util.update_master(repo, initial_branch)
 
+had_failure = False
 for r in repo.branches:
-	if r.name != 'master':
-		util.info('Syncing out %s' % r)
-		r.checkout()
-		try:
-			repo.git.rebase('master')
-		except:
-			repo.git.rebase('--abort')
-			initial_branch.checkout()
-			util.fatal('Failed to sync %s, please try manually' % r)
+    if r.name != 'master':
+        util.info('Syncing %s' % r)
+        r.checkout()
+        try:
+            repo.git.rebase('master')
+        except:
+            repo.git.rebase('--abort')
+            had_failure = True
+            util.error('Failed to sync %s' % r)
 
 initial_branch.checkout()
 
-util.success('Master synced with origin, and all branches rebased')
+if had_failure:
+    util.error('Some branches failed to rebase, please try manually')
+else:
+    util.success('Master synced with origin, and all branches rebased')
