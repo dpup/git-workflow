@@ -6,11 +6,11 @@
 #
 # Usage:
 #     git switch banana
-#     git switch master
+#     git switch main
 #
 # Is equivalent to calling:
 #     git checkout <prefix>/banana
-#     git checkout master
+#     git checkout main
 #
 # If the prefixed version of the branch wasn't found, it also
 # tries the name verbatim.

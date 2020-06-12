@@ -2,7 +2,7 @@
 #
 # git-cleanup
 #
-# Removes all branches that are fully merged, except master and the current
+# Removes all branches that are fully merged, except main and the current
 # working branch.
 #
 
@@ -21,19 +21,20 @@ except git.exc.InvalidGitRepositoryError:
 util.fatal_if_dirty(repo)
 
 local_count = 0
-branches = repo.git.branch('--merged', 'master')
+main = util.main_branch_name(repo)
+branches = repo.git.branch('--merged', main)
 for line in branches.splitlines():
   branch = line.strip()
-  if not current.match(branch) and branch != 'master':
+  if not current.match(branch) and branch != main:
     util.info('Removing %s' % branch)
     repo.git.branch('-d', branch)
     local_count += 1
 
 remote_count = 0
-branches = repo.git.branch('-r', '--merged', 'master')
+branches = repo.git.branch('-r', '--merged', main)
 for line in branches.splitlines():
   branch = line.strip().lstrip('origin/')
-  if 'master' not in branch:
+  if main not in branch:
     util.info('Removing origin/%s' % branch)
     repo.git.push('--delete', 'origin', branch)
     remote_count += 1

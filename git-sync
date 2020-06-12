@@ -2,17 +2,18 @@
 #
 # git-sync
 #
-# Script for syncing the master branch with origin and rebasing changes in the
-# current branch on top of the new master.
+# Script for syncing the main branch with origin and rebasing changes in the
+# current branch on top of the new main.
 #
 # Usage:
 # $ git sync [-i]
 #
 # Is equivalent to calling:
-#   git checkout master
-#   git pull origin master
+#   main=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+#   git checkout $main
+#   git pull origin $main
 #   git checkout feature-branch
-#   git rebase master feature-branch [-i]
+#   git rebase $main feature-branch [-i]
 #
 # Reasonable efforts are taken to handle errors and make sure you end off back
 # on your initial branch.
@@ -41,14 +42,15 @@ util.fatal_if_dirty(repo)
 
 initial_branch = repo.active_branch
 
-util.update_master(repo, initial_branch)
+util.update_main(repo, initial_branch)
 
-util.info('Rebasing %s on master' % initial_branch)
+main = util.main_branch_name(repo)
+util.info('Rebasing %s on %s' % (initial_branch, main))
 initial_branch.checkout()
 
 if interactive:
-    repo.git.rebase('master', '-i')
+    repo.git.rebase(main, '-i')
 else:
-    repo.git.rebase('master')
+    repo.git.rebase(main)
 
-util.success('Master synced with origin, %s rebased' % initial_branch)
+util.success('%s synced with origin, %s rebased' % (main, initial_branch))

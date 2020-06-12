@@ -1,5 +1,6 @@
 import json
 import getpass
+import git
 import os.path
 import os
 import sys
@@ -26,6 +27,16 @@ CYAN    = '\033[36m'
 
 RESET = '\033[0m'
 
+def main_branch_name(repo):
+        """
+        Returns the name of the 'main' branch.
+
+        Git defaults to 'master', but it doesn't have to be!
+        """
+        ref = git.refs.symbolic.SymbolicReference(repo, 'refs/remotes/origin/HEAD')
+        name = ref.ref.name
+        return name[len('origin/'):]
+
 def fatal_if_dirty(repo):
 	"""
 	Checks whether there are pending changes and exits the program if there are.
@@ -37,23 +48,24 @@ def fatal_if_dirty(repo):
 		info(repo.git.status('-s'))
 		exit(1)
 
-def update_master(repo, initial_branch):
+def update_main(repo, initial_branch):
 	"""
-	Switches to the master branch and pulls from origin. If an exception occurs
+	Switches to the main branch and pulls from origin. If an exception occurs
 	it switches back to the initial branch and exits.
 	"""
 
-	info('Switching to master branch')
+	main = main_branch_name(repo)
+	info('Switching to %s branch' % main)
 	try:
-		repo.heads.master.checkout()
+		repo.heads[main].checkout()
 	except BaseException as e:
-		fatal('Could not checkout master: %s' % e)
-	info('Pulling updates for master branch')
+		fatal('Could not checkout %s: %s' % (main, e))
+	info('Pulling updates for %s branch' % main)
 	try:
 		repo.git.remote('update', '--prune')
 		repo.remotes.origin.pull('--no-tags')
 	except BaseException as e:
-		warn('Failed to update master: %s' % e)
+		warn('Failed to update %s: %s' % (main, e))
 		initial_branch.checkout()
 		c = prompt_y_n('Continue anyway?')
 		if not c:

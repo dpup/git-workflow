@@ -5,7 +5,8 @@ _Opinionated tools for managing a team based git workflow._
 
 ## Principles
 
-- Local `master` is kept clean and relatively up to date with origin
+- Respects the name of the default branch at origin, whether it's called `main` or `master`. We use `main` throughout this README
+- Local `main` is kept clean and relatively up to date with origin
 - Avoid merge commits where possible
 - Most work occurs in personal branches and are considered private (hence `push -f` is acceptable)
 
@@ -24,7 +25,7 @@ Add this folder to your path, so `git` can pick up the scripts.
 
 ### Start
 
-**Pulls master and creates a new feature branch named `$USERNAME/feature`.**
+**Pulls main and creates a new feature branch named `$USERNAME/feature`.**
 
 `git start [feature]`
 
@@ -36,20 +37,20 @@ Add this folder to your path, so `git` can pick up the scripts.
 
 If the feature branch named `$USERNAME/feature` isn't found, the command tries
 out the name verbatim. This means it can also be used with non-feature branches
-(such as `master`).
+(such as `main`).
 
 ### Sync
 
-**Pulls master and rebases working branch.**
+**Pulls main and rebases working branch.**
 
 `git sync [-i]`
 
 This is useful to avoid your changes being interleaved with other commits.
 For example, say you were coding in your branch and made the changes `A, B, C`.
-If you merge with master the commit history may now be `W, A, X, Y, B, Z, C`.
+If you merge with main the commit history may now be `W, A, X, Y, B, Z, C`.
 Leaving the history like this can make it harder to rollback a logical set of
 changes in one go.  Using rebase, you will replay your commits on the end of
-master, resulting in `W, X, Y, Z, A, B, C`.
+main, resulting in `W, X, Y, Z, A, B, C`.
 
 Often it makes sense to make a lot of changes locally, that you wouldn't
 necessarily want to push together, in cases like this you can use
@@ -61,7 +62,7 @@ rebase can both squash and remove commits.
 
 ### Sync All
 
-**Pulls master and rebases all local branches.**
+**Pulls main and rebases all local branches.**
 
 `git sync-all`
 
@@ -89,7 +90,7 @@ the PR will be sent to `alice_has_a_long_git_handle`.
 
 ### Cleanup
 
-**Removes local and remote branches that have been merged into master.**
+**Removes local and remote branches that have been merged into main.**
 
 `git cleanup`
 
