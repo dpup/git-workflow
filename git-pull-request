@@ -125,10 +125,11 @@ if diff != '':
     util.warn(diff)
   exit(1)
 
-# Get changelog vs. master
+# Get changelog vs. main
+main = util.main_branch_name(repo)
 changes = repo.git.log('--pretty=%H (%ci)%n%s%n%b', '--abbrev-commit',
                        '--first-parent', '--no-merges', '--date=short',
-                       'master..%s' % local_branch)
+                       '%s..%s' % (main, local_branch))
 
 if changes == '':
   util.fatal('There are no changes to submit.')
@@ -186,7 +187,7 @@ payload = {
   "title": title,
   "body": description,
   "head": remote_branch.name,
-  "base": "master"
+  "base": main
 }
 
 try:

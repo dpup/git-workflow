@@ -2,7 +2,7 @@
 #
 # git-start
 #
-# Creates a new feature branch off your local master branch, rather than the
+# Creates a new feature branch off your local main branch, rather than the
 # current active branch. If an error occurs you will be reverted back to the
 # original branch you were on before running the script. The branch name is
 # automatically prefixed with your GitHub username.
@@ -11,8 +11,8 @@
 #     git start bananas
 #
 # Is equivalent to calling:
-#     git checkout master
-#     git pull origin master
+#     git checkout main
+#     git pull origin main
 #     git checkout -b dpup/bananas
 #
 # TODO: Can we get any status updates while waiting for 'git pull'
@@ -39,7 +39,7 @@ util.fatal_if_dirty(repo)
 if new_branch_name in repo.heads:
     util.fatal('A branch called "%s" already exists.' % new_branch_name)
 
-util.update_master(repo, initial_branch)
+util.update_main(repo, initial_branch)
 
 util.info('Creating new head')
 new_branch = repo.create_head(new_branch_name)

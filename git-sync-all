@@ -2,7 +2,7 @@
 #
 # git-sync-all
 #
-# Script for syncing the master branch with origin and rebasing all branches
+# Script for syncing the main branch with origin and rebasing all branches
 # against mater.
 #
 # Usage:
@@ -27,15 +27,16 @@ except git.exc.InvalidGitRepositoryError:
 util.fatal_if_dirty(repo)
 
 initial_branch = repo.active_branch
-util.update_master(repo, initial_branch)
+util.update_main(repo, initial_branch)
 
 had_failure = False
+main = util.main_branch_name(repo)
 for r in repo.branches:
-    if r.name != 'master':
+    if r.name != main:
         util.info('Syncing %s' % r)
         r.checkout()
         try:
-            repo.git.rebase('master')
+            repo.git.rebase(main)
         except:
             repo.git.rebase('--abort')
             had_failure = True
@@ -46,4 +47,4 @@ initial_branch.checkout()
 if had_failure:
     util.error('Some branches failed to rebase, please try manually')
 else:
-    util.success('Master synced with origin, and all branches rebased')
+    util.success('%s synced with origin, and all branches rebased' % main)
