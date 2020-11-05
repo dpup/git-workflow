@@ -30,10 +30,14 @@ for line in branches.splitlines():
     repo.git.branch('-d', branch)
     local_count += 1
 
+def trim_prefix(text, prefix):
+  if text.startswith(prefix):
+    return text[len(prefix):]
+
 remote_count = 0
 branches = repo.git.branch('-r', '--merged', main)
 for line in branches.splitlines():
-  branch = line.strip().lstrip('origin/')
+  branch = trim_prefix(line.strip(), 'origin/')
   if main not in branch:
     util.info('Removing origin/%s' % branch)
     repo.git.push('--delete', 'origin', branch)
