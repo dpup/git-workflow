@@ -2,10 +2,10 @@
 #
 # git-github-login
 #
-# Prompts the user for their github username and password, then requests a long
-# lived access token from github and stores the result in ~/.github-auth. The
-# whole auth response is stored in ~/.github-auth-response for debugging and
-# informational purposes.
+# Prompts the user to create a GitHub token; then stores their token and
+# username in ~/.github-auth. (This script used to create the token, but
+# as of 2/14/2020 the /authorizations endpoint is deprecated, see
+# https://developer.github.com/changes/2020-02-14-deprecating-oauth-app-endpoint/)
 #
 # This token can be used by other github related utility scripts.
 #
@@ -22,52 +22,18 @@ from requests.auth import HTTPBasicAuth
 import util
 
 username = util.prompt('GitHub username', default=getpass.getuser())
-password = util.prompt('GitHub password', password=True)
+util.warn('Git Workflow needs a GitHub access token to talk to your account.')
+util.warn('Create a token at https://github.com/settings/tokens/new with scope: repo')
+util.warn('and enter it here.')
 
-note = 'git-workflow (%s @ %s)' % (time.strftime('%c'), socket.gethostname())
-
-try:
-    r = requests.post('https://api.github.com/authorizations',
-                      json={'scopes': ['repo'], 'note': note},
-                      auth=HTTPBasicAuth(username, password))
-except:
-    err = sys.exc_info()[0]
-    util.error('Failed to login. Request Failed. %s' % err)
-    exit(1)
-
-if r.status_code == 401 and ('X-GitHub-OTP' in r.headers):
-    otp = util.prompt('One time password (via SMS or device)', default='')
-    headers = {'X-GitHub-OTP': otp}
-    try:
-        r = requests.post('https://api.github.com/authorizations',
-                          json={'scopes': ['repo'], 'note': note},
-                          auth=HTTPBasicAuth(username, password),
-                          headers=headers)
-    except:
-        err = sys.exc_info()[0]
-        util.error('Failed to login. Request Failed. %s' % err)
-        exit(1)
-
-if not r.ok:
-    try:
-        msg = r.json()['message']
-    except:
-        msg = 'Request failed. Status %d' % r.status_code
-    util.error('Failed to login. %s.' % msg)
-    exit(1)
-
-resp = r.json()
+token = util.prompt('GitHub token (with "repo" scope)', password=True)
 
 auth_file = util.get_auth_filename()
-debug_file = util.get_auth_filename() + '-response'
 
 with open(auth_file, 'w') as outfile:
     json.dump({
         'username': username,
-        'token': resp['token'],
+        'token': token,
     }, outfile)
 
-with open(debug_file, 'w') as outfile:
-    json.dump(resp, outfile)
-
-util.success('Logged in to github. Credentials saved to %s' % auth_file)
+util.success('Credentials saved to %s' % auth_file)
